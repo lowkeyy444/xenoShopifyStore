@@ -1,0 +1,52 @@
+# Node modules
+node_modules/
+
+# Env files
+.env
+*.env
+.env.local
+.env.development
+.env.production
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Prisma
+prisma/generated/
+.prisma/
+generated/
+generated/prisma/
+prisma/.cache/
+*schema.prisma.bak
+
+# Next.js
+.next/
+out/
+.next.cache/
+
+# Build outputs
+dist/
+build/
+
+# MacOS system files
+.DS_Store
+
+# VS Code settings
+.vscode/
+
+# Coverage
+coverage/
+
+# Temporary files
+tmp/
+temp/
+
+# Logs
+logs/
+*.log
+
+# Misc
+.idea/
