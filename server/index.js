@@ -6,6 +6,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const tenantRoutes = require("./routes/tenantRoutes");
+app.use("/api/tenants", tenantRoutes);
+
 app.get("/", (req, res) => {
   res.send("Xeno Shopify Ingestion Service is running ");
 });

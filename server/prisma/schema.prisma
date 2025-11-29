@@ -4,34 +4,35 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Tenant {
-  id               String   @id @default(uuid())
-  shopifyDomain    String   @unique
-  accessToken      String?
-  createdAt        DateTime @default(now())
-  Customers        Customer[]
-  Products         Product[]
-  Orders           Order[]
+  id            String     @id @default(uuid())
+  shopifyDomain String     @unique
+  accessToken   String?
+  createdAt     DateTime   @default(now())
+  Customers     Customer[]
+  Products      Product[]
+  Orders        Order[]
 }
 
 model Customer {
-  id         BigInt   @id
-  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  id         BigInt    @id
   tenantId   String
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
   email      String?
   firstName  String?
   lastName   String?
-  totalSpent Decimal  @default(0)
+  totalSpent Decimal    @default(0)
   createdAt  DateTime?
   updatedAt  DateTime?
 }
 
 model Product {
-  id        BigInt  @id
-  tenant    Tenant  @relation(fields: [tenantId], references: [id])
+  id        BigInt   @id
   tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
   title     String?
   sku       String?
   price     Decimal?
@@ -41,8 +42,8 @@ model Product {
 
 model Order {
   id         BigInt   @id
-  tenant     Tenant   @relation(fields: [tenantId], references: [id])
   tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
   customerId BigInt?
   totalPrice Decimal?
   currency   String?
