@@ -12,4 +12,6 @@ router.get("/orders-by-date/:tenantId", metricsController.ordersByDate);
 // Top customers by spend (optional ?limit=5)
 router.get("/top-customers/:tenantId", metricsController.topCustomers);
 
+router.get("/revenue-trend/:tenantId", metricsController.revenueTrend);
+
 module.exports = router;

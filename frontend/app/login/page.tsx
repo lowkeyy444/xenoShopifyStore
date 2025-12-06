@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/auth";
 
-// Shopify-inspired palette
 const PRIMARY_GREEN = "#008060";
 const PRIMARY_GREEN_HOVER = "#006E52";
 const BG_LIGHT = "#F6F6F7";
@@ -34,11 +33,9 @@ export default function LoginPage() {
       className="min-h-screen flex items-center justify-center px-4"
       style={{ backgroundColor: BG_LIGHT }}
     >
-      {/* Shopify-style card */}
       <div className="w-full max-w-sm bg-white border rounded-xl p-8 shadow-sm"
            style={{ borderColor: BORDER_GRAY }}>
 
-        {/* Brand Heading */}
         <h1
           className="text-3xl font-semibold text-center mb-2"
           style={{ color: TEXT_DARK }}
@@ -50,12 +47,10 @@ export default function LoginPage() {
           Sign in to access your store analytics
         </p>
 
-        {/* Label */}
         <label className="block text-sm mb-2" style={{ color: TEXT_DARK }}>
           Work Email
         </label>
 
-        {/* Input */}
         <input
           type="email"
           className="border rounded-lg p-3 w-full mb-3 text-gray-800 placeholder-gray-400 outline-none transition"
@@ -67,7 +62,6 @@ export default function LoginPage() {
 
         {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
 
-        {/* Shopify Green Button */}
         <button
           className="text-white w-full py-3 rounded-lg font-medium transition active:scale-[0.98]"
           style={{ backgroundColor: PRIMARY_GREEN }}

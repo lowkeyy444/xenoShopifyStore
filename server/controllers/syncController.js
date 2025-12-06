@@ -4,7 +4,6 @@ const axios = require("axios");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-// Helper: call Shopify API
 async function shopifyGet(shopDomain, accessToken, endpoint) {
   const apiVersion = "2024-07";
   const url = `https://${shopDomain}/admin/api/${apiVersion}/${endpoint}`;
@@ -23,7 +22,6 @@ exports.fullSync = async (req, res) => {
   const { tenantId } = req.params;
 
   try {
-    // 1) Find tenant
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
     });
@@ -34,9 +32,6 @@ exports.fullSync = async (req, res) => {
 
     const { shopifyDomain, accessToken } = tenant;
 
-    // --------------------------
-    // 2) Sync CUSTOMERS
-    // --------------------------
     const customersData = await shopifyGet(
       shopifyDomain,
       accessToken,
@@ -69,9 +64,6 @@ exports.fullSync = async (req, res) => {
       customersCount++;
     }
 
-    // --------------------------
-    // 3) Sync PRODUCTS
-    // --------------------------
     const productsData = await shopifyGet(
       shopifyDomain,
       accessToken,
@@ -98,9 +90,6 @@ exports.fullSync = async (req, res) => {
       productsCount++;
     }
 
-    // --------------------------
-    // 4) Sync ORDERS
-    // --------------------------
     const ordersData = await shopifyGet(
       shopifyDomain,
       accessToken,
@@ -131,9 +120,6 @@ exports.fullSync = async (req, res) => {
       ordersCount++;
     }
 
-    // --------------------------
-    // 5) Return the result
-    // --------------------------
     res.json({
       message: "Full sync completed",
       tenantId,

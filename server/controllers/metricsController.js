@@ -2,17 +2,11 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-// -----------------------------------------------
-// HELPER: Safe BigInt → Number/String converter
-// -----------------------------------------------
 function toJS(value) {
-  if (typeof value === "bigint") return value.toString(); // safer than number()
+  if (typeof value === "bigint") return value.toString();
   return value;
 }
 
-/**
- * SUMMARY METRICS
- */
 exports.summary = async (req, res) => {
   const { tenantId } = req.params;
 
@@ -38,9 +32,6 @@ exports.summary = async (req, res) => {
   }
 };
 
-/**
- * ORDERS BY DATE
- */
 exports.ordersByDate = async (req, res) => {
   const { tenantId } = req.params;
   const { start, end } = req.query;
@@ -70,7 +61,7 @@ exports.ordersByDate = async (req, res) => {
     );
 
     const dayMap = {};
-    rows.forEach(r => {
+    rows.forEach((r) => {
       dayMap[r.day] = {
         date: r.day,
         orders: Number(r.orders_count),
@@ -91,9 +82,6 @@ exports.ordersByDate = async (req, res) => {
   }
 };
 
-/**
- * TOP CUSTOMERS
- */
 exports.topCustomers = async (req, res) => {
   const { tenantId } = req.params;
   const limit = parseInt(req.query.limit || "5", 10);
@@ -110,7 +98,8 @@ exports.topCustomers = async (req, res) => {
         COUNT(o.id) AS orders_count
       FROM "Customer" c
       LEFT JOIN "Order" o
-        ON o."customerId" = c.id AND o."tenantId" = $1
+        ON o."customerId" = c.id 
+       AND o."tenantId" = $1
       WHERE c."tenantId" = $1
       GROUP BY c.id
       ORDER BY total_spent DESC
@@ -120,7 +109,6 @@ exports.topCustomers = async (req, res) => {
       limit
     );
 
-    // FIX: Sanitize BigInts everywhere
     const formatted = rows.map((r) => ({
       customerId: toJS(r.customer_id),
       name: `${r.first_name} ${r.last_name}`.trim(),
@@ -132,6 +120,54 @@ exports.topCustomers = async (req, res) => {
     return res.json(formatted);
   } catch (err) {
     console.error("metrics.topCustomers error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+exports.revenueTrend = async (req, res) => {
+  const { tenantId } = req.params;
+  const { start, end } = req.query;
+
+  try {
+    const now = new Date();
+    const defaultStart = new Date(now.getTime() - 29 * 24 * 3600 * 1000);
+
+    const startDate = start ? new Date(start) : defaultStart;
+    const endDate = end ? new Date(end) : now;
+
+    const rows = await prisma.$queryRawUnsafe(
+      `
+      SELECT 
+        to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS day,
+        COALESCE(SUM("totalPrice")::numeric, 0) AS revenue
+      FROM "Order"
+      WHERE "tenantId" = $1
+        AND "createdAt" BETWEEN $2::timestamp AND $3::timestamp
+      GROUP BY 1
+      ORDER BY 1;
+      `,
+      tenantId,
+      startDate.toISOString(),
+      endDate.toISOString()
+    );
+
+    const dayMap = {};
+    rows.forEach((r) => {
+      dayMap[r.day] = Number(r.revenue || 0);
+    });
+
+    const result = [];
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const key = d.toISOString().slice(0, 10);
+      result.push({
+        date: key,
+        revenue: dayMap[key] || 0,
+      });
+    }
+
+    return res.json(result);
+  } catch (err) {
+    console.error("metrics.revenueTrend error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

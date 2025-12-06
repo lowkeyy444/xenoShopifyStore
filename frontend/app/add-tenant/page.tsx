@@ -65,7 +65,6 @@ export default function AddTenantPage() {
           Connect a Shopify store to start syncing analytics
         </p>
 
-        {/* Store Name */}
         <label className="block text-sm font-medium mb-1" style={{ color: TEXT_DARK }}>
           Store Name
         </label>
@@ -77,7 +76,6 @@ export default function AddTenantPage() {
           onChange={(e) => setShopName(e.target.value)}
         />
 
-        {/* Domain */}
         <label className="block text-sm font-medium mb-1" style={{ color: TEXT_DARK }}>
           Shopify Store Domain
         </label>
@@ -89,7 +87,6 @@ export default function AddTenantPage() {
           onChange={(e) => setDomain(e.target.value)}
         />
 
-        {/* Token */}
         <label className="block text-sm font-medium mb-1" style={{ color: TEXT_DARK }}>
           Admin API Access Token
         </label>

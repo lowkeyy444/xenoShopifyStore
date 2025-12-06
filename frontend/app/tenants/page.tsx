@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { api } from "@/lib/api";
 
-// Shopify design tokens
 const SHOPIFY_GREEN = "#008060";
 const SHOPIFY_GREEN_DARK = "#006E52";
 const PAGE_BG = "#F8FAFC";
@@ -18,12 +17,10 @@ export default function TenantsPage() {
   const [tenants, setTenants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Mount safely
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Fetch tenants
   useEffect(() => {
     if (!mounted) return;
 
@@ -47,9 +44,6 @@ export default function TenantsPage() {
 
   if (!mounted) return null;
 
-  // -----------------------------------------------------
-  // LOADING STATE
-  // -----------------------------------------------------
   if (loading) {
     return (
       <div
@@ -66,7 +60,6 @@ export default function TenantsPage() {
 
       <div className="max-w-4xl mx-auto">
 
-        {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div>
             <h1 className="text-4xl font-bold" style={{ color: TEXT_DARK }}>
@@ -84,7 +77,6 @@ export default function TenantsPage() {
           </button>
         </div>
 
-        {/* EMPTY STATE */}
         {tenants.length === 0 && (
           <div className="text-center text-gray-600 mt-24">
             <p className="text-xl mb-4">No stores connected yet.</p>
@@ -99,7 +91,6 @@ export default function TenantsPage() {
           </div>
         )}
 
-        {/* STORES GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {tenants.map((tenant) => (
             <div

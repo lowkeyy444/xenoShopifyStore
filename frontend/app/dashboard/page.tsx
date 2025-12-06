@@ -10,12 +10,13 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  LineChart,
+  Line,
 } from "recharts";
 
-// Shopify colors
 const SHOPIFY_GREEN = "#008060";
 const SHOPIFY_GREEN_DARK = "#006E52";
-const TEXT_DARK = "#1A1A1A"; // Bold dark header color
+const TEXT_DARK = "#1A1A1A";
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
@@ -23,19 +24,18 @@ export default function DashboardPage() {
 
   const [summary, setSummary] = useState<any>(null);
   const [ordersByDate, setOrdersByDate] = useState<any[]>([]);
+  const [revenueTrend, setRevenueTrend] = useState<any[]>([]);
   const [topCustomers, setTopCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
-  // Hydration-safe mount
   useEffect(() => {
     setMounted(true);
     setTenantId(localStorage.getItem("tenantId"));
   }, []);
 
-  // Fetch metrics
   useEffect(() => {
     if (!mounted || !tenantId) return;
 
@@ -43,20 +43,22 @@ export default function DashboardPage() {
       try {
         setLoading(true);
 
-        const s = await axios.get(
-          `http://localhost:3000/api/metrics/summary/${tenantId}`
-        );
-
-        const o = await axios.get(
-          `http://localhost:3000/api/metrics/orders-by-date/${tenantId}?start=${start}&end=${end}`
-        );
-
-        const tc = await axios.get(
-          `http://localhost:3000/api/metrics/top-customers/${tenantId}`
-        );
+        const [s, o, r, tc] = await Promise.all([
+          axios.get(`http://localhost:3000/api/metrics/summary/${tenantId}`),
+          axios.get(
+            `http://localhost:3000/api/metrics/orders-by-date/${tenantId}?start=${start}&end=${end}`
+          ),
+          axios.get(
+            `http://localhost:3000/api/metrics/revenue-trend/${tenantId}?start=${start}&end=${end}`
+          ),
+          axios.get(
+            `http://localhost:3000/api/metrics/top-customers/${tenantId}`
+          ),
+        ]);
 
         setSummary(s.data);
         setOrdersByDate(o.data);
+        setRevenueTrend(r.data);
         setTopCustomers(tc.data);
       } catch (error) {
         console.error("Dashboard load error:", error);
@@ -68,7 +70,6 @@ export default function DashboardPage() {
     fetchData();
   }, [mounted, tenantId, start, end]);
 
-  // Sync button logic
   const handleSync = async () => {
     if (!tenantId) return alert("No tenant selected");
 
@@ -77,29 +78,31 @@ export default function DashboardPage() {
       await axios.post(`http://localhost:3000/api/sync/full/${tenantId}`);
       alert("Sync completed!");
 
-      // Re-fetch after sync
-      const s = await axios.get(
-        `http://localhost:3000/api/metrics/summary/${tenantId}`
-      );
-      const o = await axios.get(
-        `http://localhost:3000/api/metrics/orders-by-date/${tenantId}?start=${start}&end=${end}`
-      );
-      const tc = await axios.get(
-        `http://localhost:3000/api/metrics/top-customers/${tenantId}`
-      );
+      const [s, o, r, tc] = await Promise.all([
+        axios.get(`http://localhost:3000/api/metrics/summary/${tenantId}`),
+        axios.get(
+          `http://localhost:3000/api/metrics/orders-by-date/${tenantId}?start=${start}&end=${end}`
+        ),
+        axios.get(
+          `http://localhost:3000/api/metrics/revenue-trend/${tenantId}?start=${start}&end=${end}`
+        ),
+        axios.get(
+          `http://localhost:3000/api/metrics/top-customers/${tenantId}`
+        ),
+      ]);
 
       setSummary(s.data);
       setOrdersByDate(o.data);
+      setRevenueTrend(r.data);
       setTopCustomers(tc.data);
     } catch (err) {
       console.error("Sync error:", err);
-      alert("Sync failed. Check backend.");
+      alert("Sync failed.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Safe rendering
   if (!mounted) return null;
   if (!tenantId) return <p className="p-10 text-red-500">No tenant selected</p>;
   if (loading) return <p className="p-10">Loading dashboard...</p>;
@@ -107,7 +110,6 @@ export default function DashboardPage() {
   return (
     <div className="p-10 space-y-10 bg-gray-50 min-h-screen">
 
-      {/* ------------ HEADER (Bolder, Cleaner, Shopify Style) ------------ */}
       <div className="flex items-center justify-between">
         <div>
           <h1
@@ -131,7 +133,6 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* ------------ SUMMARY CARDS ------------ */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <SummaryCard title="Customers" value={summary.totalCustomers} />
         <SummaryCard title="Orders" value={summary.totalOrders} />
@@ -142,16 +143,11 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* ------------ COMBINED FILTER + CHART CARD ------------ */}
       <div className="bg-white p-6 rounded-xl shadow space-y-6">
-        <h2
-          className="text-2xl font-semibold"
-          style={{ color: TEXT_DARK }}
-        >
+        <h2 className="text-2xl font-semibold" style={{ color: TEXT_DARK }}>
           Orders by Date
         </h2>
 
-        {/* Filters in a row */}
         <div className="flex items-center gap-6">
           <div>
             <p className="text-gray-600 text-sm">Start Date</p>
@@ -162,7 +158,6 @@ export default function DashboardPage() {
               onChange={(e) => setStart(e.target.value)}
             />
           </div>
-
           <div>
             <p className="text-gray-600 text-sm">End Date</p>
             <input
@@ -174,7 +169,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Chart */}
         <div className="h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={ordersByDate}>
@@ -188,12 +182,33 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ------------ TOP CUSTOMERS ------------ */}
+      <div className="bg-white p-6 rounded-xl shadow space-y-6">
+        <h2 className="text-2xl font-semibold" style={{ color: TEXT_DARK }}>
+          Revenue Trend
+        </h2>
+
+        <div className="h-[350px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={revenueTrend}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="revenue"
+                stroke={SHOPIFY_GREEN}
+                strokeWidth={3}
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+     
       <div className="bg-white p-6 rounded-xl shadow">
-        <h2
-          className="text-2xl font-semibold mb-4"
-          style={{ color: TEXT_DARK }}
-        >
+        <h2 className="text-2xl font-semibold mb-4" style={{ color: TEXT_DARK }}>
           Top Customers
         </h2>
 
@@ -218,7 +233,9 @@ export default function DashboardPage() {
                 <td className="p-3 text-right text-gray-900 font-medium">
                   ${c.totalSpent}
                 </td>
-                <td className="p-3 text-right text-gray-900">{c.ordersCount}</td>
+                <td className="p-3 text-right text-gray-900">
+                  {c.ordersCount}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -228,7 +245,7 @@ export default function DashboardPage() {
   );
 }
 
-/* ------------ Summary Card ------------ */
+
 function SummaryCard({
   title,
   value,
