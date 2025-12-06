@@ -14,8 +14,10 @@ import {
   Line,
 } from "recharts";
 
+// Backend URL (your Railway deployment)
+const API_BASE = "https://xenoshopifystore-production.up.railway.app";
+
 const SHOPIFY_GREEN = "#008060";
-const SHOPIFY_GREEN_DARK = "#006E52";
 const TEXT_DARK = "#1A1A1A";
 
 export default function DashboardPage() {
@@ -31,11 +33,13 @@ export default function DashboardPage() {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
+  // Safe hydration
   useEffect(() => {
     setMounted(true);
     setTenantId(localStorage.getItem("tenantId"));
   }, []);
 
+  // Fetch dashboard metrics
   useEffect(() => {
     if (!mounted || !tenantId) return;
 
@@ -44,16 +48,14 @@ export default function DashboardPage() {
         setLoading(true);
 
         const [s, o, r, tc] = await Promise.all([
-          axios.get(`http://localhost:3000/api/metrics/summary/${tenantId}`),
+          axios.get(`${API_BASE}/api/metrics/summary/${tenantId}`),
           axios.get(
-            `http://localhost:3000/api/metrics/orders-by-date/${tenantId}?start=${start}&end=${end}`
+            `${API_BASE}/api/metrics/orders-by-date/${tenantId}?start=${start}&end=${end}`
           ),
           axios.get(
-            `http://localhost:3000/api/metrics/revenue-trend/${tenantId}?start=${start}&end=${end}`
+            `${API_BASE}/api/metrics/revenue-trend/${tenantId}?start=${start}&end=${end}`
           ),
-          axios.get(
-            `http://localhost:3000/api/metrics/top-customers/${tenantId}`
-          ),
+          axios.get(`${API_BASE}/api/metrics/top-customers/${tenantId}`),
         ]);
 
         setSummary(s.data);
@@ -70,25 +72,24 @@ export default function DashboardPage() {
     fetchData();
   }, [mounted, tenantId, start, end]);
 
+  // Sync Now button
   const handleSync = async () => {
     if (!tenantId) return alert("No tenant selected");
 
     try {
       setLoading(true);
-      await axios.post(`http://localhost:3000/api/sync/full/${tenantId}`);
+      await axios.post(`${API_BASE}/api/sync/full/${tenantId}`);
       alert("Sync completed!");
 
       const [s, o, r, tc] = await Promise.all([
-        axios.get(`http://localhost:3000/api/metrics/summary/${tenantId}`),
+        axios.get(`${API_BASE}/api/metrics/summary/${tenantId}`),
         axios.get(
-          `http://localhost:3000/api/metrics/orders-by-date/${tenantId}?start=${start}&end=${end}`
+          `${API_BASE}/api/metrics/orders-by-date/${tenantId}?start=${start}&end=${end}`
         ),
         axios.get(
-          `http://localhost:3000/api/metrics/revenue-trend/${tenantId}?start=${start}&end=${end}`
+          `${API_BASE}/api/metrics/revenue-trend/${tenantId}?start=${start}&end=${end}`
         ),
-        axios.get(
-          `http://localhost:3000/api/metrics/top-customers/${tenantId}`
-        ),
+        axios.get(`${API_BASE}/api/metrics/top-customers/${tenantId}`),
       ]);
 
       setSummary(s.data);
@@ -109,16 +110,12 @@ export default function DashboardPage() {
 
   return (
     <div className="p-10 space-y-10 bg-gray-50 min-h-screen">
-
+      {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
-          <h1
-            className="text-5xl font-bold tracking-tight"
-            style={{ color: TEXT_DARK }}
-          >
+          <h1 className="text-5xl font-bold tracking-tight" style={{ color: TEXT_DARK }}>
             Store Dashboard
           </h1>
-
           <p className="text-gray-600 mt-1 text-lg">
             A complete overview of your store’s performance
           </p>
@@ -133,21 +130,20 @@ export default function DashboardPage() {
         </button>
       </div>
 
+      {/* SUMMARY CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <SummaryCard title="Customers" value={summary.totalCustomers} />
         <SummaryCard title="Orders" value={summary.totalOrders} />
-        <SummaryCard
-          title="Revenue"
-          value={`$${summary.totalRevenue}`}
-          color="green"
-        />
+        <SummaryCard title="Revenue" value={`$${summary.totalRevenue}`} color="green" />
       </div>
 
+      {/* ORDERS CHART */}
       <div className="bg-white p-6 rounded-xl shadow space-y-6">
         <h2 className="text-2xl font-semibold" style={{ color: TEXT_DARK }}>
           Orders by Date
         </h2>
 
+        {/* Filters */}
         <div className="flex items-center gap-6">
           <div>
             <p className="text-gray-600 text-sm">Start Date</p>
@@ -158,6 +154,7 @@ export default function DashboardPage() {
               onChange={(e) => setStart(e.target.value)}
             />
           </div>
+
           <div>
             <p className="text-gray-600 text-sm">End Date</p>
             <input
@@ -169,6 +166,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Orders Bar Chart */}
         <div className="h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={ordersByDate}>
@@ -182,6 +180,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* REVENUE TREND */}
       <div className="bg-white p-6 rounded-xl shadow space-y-6">
         <h2 className="text-2xl font-semibold" style={{ color: TEXT_DARK }}>
           Revenue Trend
@@ -206,7 +205,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-     
+      {/* TOP CUSTOMERS */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h2 className="text-2xl font-semibold mb-4" style={{ color: TEXT_DARK }}>
           Top Customers
@@ -221,7 +220,6 @@ export default function DashboardPage() {
               <th className="p-3 text-right font-semibold">Orders</th>
             </tr>
           </thead>
-
           <tbody>
             {topCustomers.map((c, i) => (
               <tr
@@ -233,18 +231,16 @@ export default function DashboardPage() {
                 <td className="p-3 text-right text-gray-900 font-medium">
                   ${c.totalSpent}
                 </td>
-                <td className="p-3 text-right text-gray-900">
-                  {c.ordersCount}
-                </td>
+                <td className="p-3 text-right text-gray-900">{c.ordersCount}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
     </div>
   );
 }
-
 
 function SummaryCard({
   title,
