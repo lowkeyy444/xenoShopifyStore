@@ -10,6 +10,7 @@ A complete Shopify ingestion + analytics dashboard built with:
 
 This project demonstrates ingestion, transformation, storage, and visualization of Shopify store data across multiple tenants.
 
+Live Demo: https://xeno-shopify-store-m6pz.vercel.app/login
 ⸻
 
 🚀 Features Implemented
